@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# gabix-build — build (and optionally run) the gabix kernel
+#
+# Usage: gabix-build [--run]
+#   --run   After building, launch the disk image in QEMU.
+
+set -e
+
+ROOTDIR="$(cd "$(dirname "$0")" && pwd)"
+
+# ── Argument parsing ──────────────────────────────────────────────────────────
+RUN_AFTER=0
+for arg in "$@"; do
+    case "$arg" in
+        --run) RUN_AFTER=1 ;;
+        *) printf 'gabix-build: unknown option: %s\n' "$arg" >&2; exit 1 ;;
+    esac
+done
+
+# ── Docker image ──────────────────────────────────────────────────────────────
+# Rebuild the cross-compiler image only when files in build/ have changed.
+STAMP_FILE="$ROOTDIR/build/.build-stamp"
+
+docker_hash() {
+    if command -v sha256sum >/dev/null 2>&1; then SHASUM="sha256sum"; else SHASUM="shasum -a 256"; fi
+    # Hash only the files that are baked into the Docker image; runtime scripts
+    # and config files do not affect the image and must not trigger a rebuild.
+    cat "$ROOTDIR/build/Dockerfile" \
+        "$ROOTDIR/build/compose.yml" \
+        "$ROOTDIR/build/scripts/build-binutils.sh" \
+        "$ROOTDIR/build/scripts/build-gcc.sh" \
+        | $SHASUM | cut -d' ' -f1
+}
+
+needs_docker_rebuild() {
+    docker image inspect x86_64-build >/dev/null 2>&1 || return 0
+    [ ! -f "$STAMP_FILE" ] || [ "$(cat "$STAMP_FILE")" != "$(docker_hash)" ]
+}
+
+if needs_docker_rebuild; then
+    docker compose -f "$ROOTDIR/build/compose.yml" build
+    docker_hash > "$STAMP_FILE"
+fi
+
+# ── Build (kernel + disk image) ───────────────────────────────────────────────
+docker compose -f "$ROOTDIR/build/compose.yml" run --rm build
+
+# ── Run ───────────────────────────────────────────────────────────────────────
+if [ "$RUN_AFTER" = "1" ]; then
+    if [[ "$OSTYPE" == darwin* ]]; then
+        # macOS
+        qemu-system-x86_64 \
+            -M q35 \
+            -m 256M \
+            -display cocoa,zoom-to-fit=off \
+            -drive format=raw,file="$ROOTDIR/build/out/image.img" || true
+    else
+        # Linux
+        qemu-system-x86_64 \
+            -M q35 \
+            -m 256M \
+            -display gtk,zoom-to-fit=off \
+            -drive format=raw,file="$ROOTDIR/build/out/image.img" || true
+    fi
+fi

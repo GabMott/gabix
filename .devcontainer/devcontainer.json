@@ -1,0 +1,54 @@
+{
+    "name": "gabix",
+    // Build the devenv stage from the project's own Dockerfile so the container
+    // is always in sync with the toolchain used by the production build.
+    "build": {
+        "dockerfile": "../build/Dockerfile",
+        "context": "..",
+        "target": "devenv"
+    },
+    // Mirror the volume mount used by compose.yml so that script paths
+    // (/workspace/...) are identical whether building or developing.
+    "workspaceFolder": "/workspace",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    // Generate compile_commands.json immediately so clangd has index data
+    // as soon as the container starts.  The toolchain file already sets
+    // CMAKE_EXPORT_COMPILE_COMMANDS=ON, so only a configure step is needed.
+    // git safe.directory: the workspace is a bind-mount whose files may be
+    // owned by a different UID than the container user.  Without this, git
+    // (and VS Code's SCM panel) refuses to operate on the repository.
+    "postCreateCommand": "git config --global --add safe.directory /workspace && cmake -S /workspace/kernel -B /workspace/build/cmake-build -DCMAKE_TOOLCHAIN_FILE=/workspace/build/toolchain-x86_64-elf.cmake",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                // clangd — primary IntelliSense and formatting provider
+                "llvm-vs-code-extensions.vscode-clangd",
+                // CMake Tools — configure / build targets from the IDE
+                "ms-vscode.cmake-tools",
+                // C/C++ — retained for its debugger (GDB/LLDB); IntelliSense
+                // engine is disabled below so it does not conflict with clangd
+                "ms-vscode.cpptools"
+            ],
+            "settings": {
+                // ── clangd ────────────────────────────────────────────────
+                // compile_commands.json lives in the out-of-tree build dir.
+                // --query-driver lets clangd interrogate the cross-compiler
+                // for its built-in include paths (libgcc headers, etc.).
+                "clangd.arguments": [
+                    "--compile-commands-dir=${workspaceFolder}/build/cmake-build",
+                    "--query-driver=/usr/local/bin/x86_64-elf-*",
+                    "--background-index",
+                    "--clang-tidy"
+                ],
+                // ── C/C++ extension ───────────────────────────────────────
+                // Disable the cpptools IntelliSense engine; clangd owns that
+                // role.  cpptools is still active for its debugger support.
+                "C_Cpp.intelliSenseEngine": "disabled",
+                // ── Formatting ────────────────────────────────────────────
+                "[c]": {
+                    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "folders": [
+        {
+            "name": "gabix",
+            "path": "."
+        }
+    ],
+    "settings": {
+        // CMake Tools — source and out-of-tree build directory
+        "cmake.sourceDirectory": "${workspaceFolder}/kernel",
+        "cmake.buildDirectory": "${workspaceFolder}/build/cmake-build",
+        // Associate .asm files with x86 assembly language support
+        "files.associations": {
+            "*.asm": "asm"
+        },
+        // Editor behaviour
+        "editor.formatOnSave": true,
+        "editor.tabCompletion": "on",
+        "editor.detectIndentation": false,
+        // Disable AI inline completions; keep IntelliSense completions only
+        "editor.inlineSuggest.suppressSuggestions": true,
+        "github.copilot.editor.enableAutoCompletions": false,
+        // IntelliSense is provided by clangd (configured in devcontainer.json).
+        // Disable the cpptools engine here so it does not run outside the
+        // container either; cpptools is still used for its debugger.
+        "C_Cpp.intelliSenseEngine": "disabled"
+    },
+    "extensions": {
+        "recommendations": [
+            // clangd — IntelliSense and formatting (auto-installed in Dev Container)
+            "llvm-vs-code-extensions.vscode-clangd",
+            // C/C++ — debugger support
+            "ms-vscode.cpptools",
+            // CMake Tools — build system integration
+            "ms-vscode.cmake-tools",
+            // Dev Containers — required to open the project inside the build image
+            "ms-vscode-remote.remote-containers"
+        ]
+    }
+}

@@ -1,0 +1,13 @@
+services:
+  build:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+      args:
+        BINUTILS_VERSION: "2.46.0"
+        GCC_VERSION: "16.1.0"
+    image: x86_64-build
+    platform: ${DOCKER_DEFAULT_PLATFORM:-linux/amd64}
+    volumes:
+      - ..:/workspace
+    command: sh /workspace/build/scripts/build-image.sh

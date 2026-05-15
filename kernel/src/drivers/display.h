@@ -11,6 +11,7 @@
 #define CHARH 32
 #define PAD 5
 
+void print_string(const char*);
 int display_check(void);
 int display_init(void);
 

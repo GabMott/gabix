@@ -18,6 +18,7 @@ void kmain(void)
     if (display_check())
     {
         display_init();
+        print_string("Beep boop I am computer");
     }
     else
     {

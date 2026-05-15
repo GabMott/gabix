@@ -1,16 +1,28 @@
-#include "main.h"
-#include "drivers/display.h"
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include "drivers/display.h"
+#include "main.h"
 
-void kmain(void) {
+void hcf(void)
+{
+    for (;;)
+    {
+        asm ("hlt");
+    }
+}
 
-  if (display_check()) {
-    display_init();
-  } else {
+void kmain(void)
+{
+
+    if (display_check())
+    {
+        display_init();
+    }
+    else
+    {
+        hcf();
+    }
+
     hcf();
-  }
-
-  hcf();
 }

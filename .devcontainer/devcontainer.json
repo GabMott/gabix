@@ -27,7 +27,9 @@
                 "ms-vscode.cmake-tools",
                 // C/C++ — retained for its debugger (GDB/LLDB); IntelliSense
                 // engine is disabled below so it does not conflict with clangd
-                "ms-vscode.cpptools"
+                "ms-vscode.cpptools",
+                // GitHub Pull Requests — create and review PRs from VS Code
+                "github.vscode-pull-request-github"
             ],
             "settings": {
                 // ── clangd ────────────────────────────────────────────────

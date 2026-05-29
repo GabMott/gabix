@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
-char uint32_to_char(uint32_t);
+void uint64_to_str_r(char **ptr, uint64_t val);
+
+char* uint64_to_str(uint64_t val);
 
 #endif // _UTIL_H_
